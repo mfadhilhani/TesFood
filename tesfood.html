@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Tesfood</title>
+<style>
+:root{--bg:#f3f5f1;--card:#fff;--tx:#18241b;--mut:#5f6f63;--ac:#1f6b43;--onac:#fff;--soft:#e4efe7;--bd:#d3dcd5;--dg:#b3261e;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#101512;--card:#19201b;--tx:#e6eee8;--mut:#98a89c;--ac:#6fcf97;--onac:#0c1a11;--soft:#243229;--bd:#2c382f;--dg:#f2b8b5}}
+:root[data-theme="dark"]{--bg:#101512;--card:#19201b;--tx:#e6eee8;--mut:#98a89c;--ac:#6fcf97;--onac:#0c1a11;--soft:#243229;--bd:#2c382f;--dg:#f2b8b5}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.5 "Segoe UI",system-ui,-apple-system,Roboto,sans-serif}
+main{max-width:640px;margin:0 auto;padding:16px 16px 48px}
+h1{font-size:1.7rem;margin:8px 0 2px;letter-spacing:-.02em}
+h1 span{color:var(--ac)}
+.sub{color:var(--mut);margin:0 0 16px;font-size:.92rem}
+section{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:14px;margin-bottom:14px}
+h2{font-size:1rem;margin:0 0 10px}
+label{display:block;font-size:.85rem;color:var(--mut);margin:0 0 4px}
+input,select,textarea{width:100%;font:inherit;color:var(--tx);background:var(--bg);border:1px solid var(--bd);border-radius:8px;padding:9px 10px;min-width:0}
+input:focus,select:focus,textarea:focus,button:focus-visible,a.btn:focus-visible{outline:2px solid var(--ac);outline-offset:1px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+.g1{margin-bottom:10px}
+.row{display:grid;grid-template-columns:28px 1fr 90px 36px;gap:6px;align-items:center;margin-bottom:6px}
+.row b{color:var(--mut);text-align:right;font-weight:600}
+button,a.btn{font:inherit;cursor:pointer;border:1px solid var(--bd);background:var(--card);color:var(--tx);border-radius:8px;padding:9px 12px;text-decoration:none;display:inline-block;text-align:center}
+button.p,a.btn.p{background:var(--ac);color:var(--onac);border-color:var(--ac);font-weight:600}
+button.x{padding:6px 0;color:var(--dg)}
+.acts{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.acts>*{flex:1 1 140px}
+textarea{resize:vertical}
+#pv{min-height:200px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.88rem;line-height:1.5}
+.hint{font-size:.82rem;color:var(--mut);margin:8px 0 0}
+#th{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.t{position:relative;width:72px;height:72px;border-radius:8px;overflow:hidden;border:1px solid var(--bd)}
+.t img{width:100%;height:100%;object-fit:cover;display:block}
+.t button{position:absolute;top:2px;right:2px;width:22px;height:22px;padding:0;border-radius:50%;line-height:1;background:rgba(0,0,0,.65);color:#fff;border:0}
+canvas{width:100%;height:auto;border-radius:8px;border:1px solid var(--bd);margin-top:10px;display:block}
+#toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--tx);color:var(--bg);padding:9px 16px;border-radius:20px;font-size:.9rem;opacity:0;pointer-events:none;transition:opacity .2s;max-width:90%;text-align:center}
+#toast.on{opacity:1}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<main>
+<h1>Tes<span>food</span></h1>
+<p class="sub">Laporan test food harian, siap kirim ke WhatsApp.</p>
+
+<section>
+<h2>Info laporan</h2>
+<div class="g1"><label for="dt">Tanggal (otomatis hari ini)</label><input type="date" id="dt"></div>
+<div class="g2">
+<div><label for="meal">Waktu makan</label>
+<select id="meal"><option>Breakfast</option><option>Lunch</option><option>Dinner</option><option>Supper</option></select></div>
+<div><label for="site">Site</label>
+<select id="site"><option>BCP</option><option value="__x">Lainnya…</option></select></div>
+</div>
+<div id="sx" hidden><label for="sxi">Nama site</label><input id="sxi" placeholder="Ketik nama site"></div>
+</section>
+
+<section>
+<h2>Daftar menu</h2>
+<div id="rows"></div>
+<div class="acts"><button class="p" id="add" type="button">+ Tambah menu</button></div>
+</section>
+
+<section>
+<h2>Kesimpulan</h2>
+<textarea id="ks" rows="2">Makanan dalam kondisi layak untuk dikonsumsi</textarea>
+</section>
+
+<section>
+<h2>Hasil laporan</h2>
+<textarea id="pv" readonly></textarea>
+<div class="acts"><button id="cp" type="button">Salin teks</button></div>
+</section>
+
+<section>
+<h2>Kolase foto</h2>
+<label for="fi">Pilih beberapa foto makanan</label>
+<input type="file" id="fi" accept="image/*" multiple>
+<div id="th"></div>
+<canvas id="cv" hidden></canvas>
+<div class="acts" id="ca" hidden>
+<button id="dl" type="button">Unduh kolase</button>
+</div>
+</section>
+
+<section>
+<h2>Kirim</h2>
+<button class="p" id="send" type="button" style="width:100%">Kirim kolase + teks ke WhatsApp</button>
+<p class="hint">Jika perangkat mendukung, kolase dan teks dikirim sebagai satu pesan (teks jadi keterangan gambar). Jika tidak, tombol ini menyimpan kolase (muncul konfirmasi) dan menyalin teks: lampirkan gambar di WhatsApp, lalu tempel teks di kolom keterangan. Tanpa foto, hanya teks yang dikirim.</p>
+</section>
+</main>
+<div id="toast" role="status"></div>
+
+<script>
+const $=id=>document.getElementById(id);
+const DAYS=["Minggu","Senin","Selasa","Rabu","Kamis","Jum’at","Sabtu"];
+const MON=["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
+const items=[["Nasi putih","Ok"],["Ikan bb pepes","Ok"],["Tempe Mendoan","Ok"],["Sup Oyong","Ok"],["Bubur kacang hijau","Ok"],["Sambal","Ok"]].map(([n,k])=>({n,k}));
+const photos=[];
+const pad=n=>String(n).padStart(2,"0");
+
+function today(){const d=new Date();return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate())}
+function dateText(){
+  const v=$("dt").value||today();const [y,m,d]=v.split("-").map(Number);
+  const dt=new Date(y,m-1,d);
+  return DAYS[dt.getDay()]+", "+pad(d)+" "+MON[m-1]+" "+y;
+}
+function siteName(){return $("site").value==="__x"?($("sxi").value.trim()||"-"):$("site").value}
+function report(){
+  const list=items.filter(i=>i.n.trim()).map((i,x)=>(x+1)+". "+i.n.trim()+": "+i.k.trim()).join("\n");
+  return "*Test Food Menu Reguler*\n*"+dateText()+"*\n\n*Menu "+$("meal").value+" Site "+siteName()+"*\n"+list+"\n\n*Kesimpulan :*\n"+$("ks").value.trim();
+}
+function upd(){
+  const t=report();$("pv").value=t;
+}
+function toast(m){const t=$("toast");t.textContent=m;t.classList.add("on");clearTimeout(toast.h);toast.h=setTimeout(()=>t.classList.remove("on"),m.length>60?6000:2600)}
+
+function renderRows(){
+  const box=$("rows");box.innerHTML="";
+  items.forEach((it,i)=>{
+    const r=document.createElement("div");r.className="row";
+    r.innerHTML='<b>'+(i+1)+'.</b>';
+    const n=document.createElement("input");n.value=it.n;n.placeholder="Nama makanan";n.setAttribute("aria-label","Nama makanan "+(i+1));
+    n.oninput=()=>{it.n=n.value;upd()};
+    const k=document.createElement("input");k.value=it.k;k.placeholder="Ket.";k.setAttribute("aria-label","Keterangan "+(i+1));
+    k.oninput=()=>{it.k=k.value;upd()};
+    const x=document.createElement("button");x.type="button";x.className="x";x.textContent="✕";x.setAttribute("aria-label","Hapus menu "+(i+1));
+    x.onclick=()=>{items.splice(i,1);renderRows();upd()};
+    r.append(n,k,x);box.appendChild(r);
+  });
+}
+$("add").onclick=()=>{items.push({n:"",k:"Ok"});renderRows();upd();const ins=$("rows").querySelectorAll("input");ins[ins.length-2].focus()};
+["dt","meal","ks","sxi"].forEach(id=>$(id).addEventListener("input",upd));
+$("site").onchange=()=>{$("sx").hidden=$("site").value!=="__x";upd();if(!$("sx").hidden)$("sxi").focus()};
+async function copyText(){
+  try{await navigator.clipboard.writeText($("pv").value);return true}
+  catch(e){$("pv").select();try{return document.execCommand("copy")}catch(_){return false}}
+}
+$("cp").onclick=async()=>toast(await copyText()?"Teks disalin":"Gagal menyalin, salin manual dari kotak teks");
+
+/* Kolase */
+function loadImg(file){return new Promise(res=>{
+  const url=URL.createObjectURL(file),img=new Image();
+  img.onload=()=>res({img,url});img.onerror=()=>{URL.revokeObjectURL(url);res(null)};img.src=url;
+})}
+$("fi").onchange=async e=>{
+  for(const f of e.target.files){const p=await loadImg(f);if(p)photos.push(p)}
+  e.target.value="";renderThumbs();draw();
+};
+function renderThumbs(){
+  const th=$("th");th.innerHTML="";
+  photos.forEach((p,i)=>{
+    const d=document.createElement("div");d.className="t";
+    const im=document.createElement("img");im.src=p.url;im.alt="Foto "+(i+1);
+    const b=document.createElement("button");b.type="button";b.textContent="✕";b.setAttribute("aria-label","Hapus foto "+(i+1));
+    b.onclick=()=>{URL.revokeObjectURL(p.url);photos.splice(i,1);renderThumbs();draw()};
+    d.append(im,b);th.appendChild(d);
+  });
+}
+function draw(){
+  const cv=$("cv"),n=photos.length;
+  cv.hidden=$("ca").hidden=!n;if(!n)return;
+  const cols=n<=3?n:n===4?2:n<=6?3:4,rows=Math.ceil(n/cols),W=1080,g=4;
+  const cw=(W-g*(cols-1))/cols;
+  const h=n<=3?470:cols===2?Math.round(cw*.75):Math.round(cw*4/3);
+  cv.width=W;cv.height=rows*h+(rows-1)*g;
+  const c=cv.getContext("2d");c.fillStyle="#111";c.fillRect(0,0,cv.width,cv.height);
+  let k=0;
+  for(let r=0;r<rows;r++){
+    const cnt=Math.min(cols,n-k),w=(W-g*(cnt-1))/cnt;
+    for(let j=0;j<cnt;j++,k++){
+      const im=photos[k].img,x=j*(w+g),y=r*(h+g);
+      const s=Math.max(w/im.naturalWidth,h/im.naturalHeight),sw=w/s,sh=h/s;
+      c.drawImage(im,(im.naturalWidth-sw)/2,(im.naturalHeight-sh)/2,sw,sh,x,y,w,h);
+    }
+  }
+}
+function blob(){return new Promise(r=>$("cv").toBlob(r,"image/jpeg",.9))}
+let DL=null;
+try{window.claude&&window.claude.use&&window.claude.use("downloads").then(d=>{DL=d}).catch(()=>{})}catch(e){}
+async function saveBlob(b){
+  const name="kolase-tesfood-"+($("dt").value||today())+".jpg";
+  if(DL){
+    try{await DL.save({filename:name,data:b});return "saved"}
+    catch(e){return e&&e.code==="declined"?"declined":"error"}
+  }
+  try{const a=document.createElement("a");a.href=URL.createObjectURL(b);a.download=name;document.body.appendChild(a);a.click();a.remove();return "saved"}
+  catch(e){return "error"}
+}
+$("dl").onclick=async()=>{
+  const r=await saveBlob(await blob());
+  toast(r==="saved"?"Kolase disimpan":r==="declined"?"Penyimpanan dibatalkan":"Gagal menyimpan kolase");
+};
+
+$("send").onclick=async()=>{
+  const t=report();
+  const open=()=>{const a=document.createElement("a");a.href="https://wa.me/?text="+encodeURIComponent(t);a.target="_blank";a.rel="noopener";document.body.appendChild(a);a.click();a.remove()};
+  if(!photos.length){open();return}
+  const b=await blob(),f=new File([b],"kolase-tesfood.jpg",{type:"image/jpeg"});
+  try{
+    if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f],text:t});return}
+  }catch(e){if(e&&e.name==="AbortError")return}
+  const ok=await copyText(),r=await saveBlob(b);
+  if(r==="saved")toast((ok?"Kolase disimpan dan teks disalin. ":"Kolase disimpan. ")+"Di WhatsApp: lampirkan gambar, lalu tempel teks di keterangan.");
+  else toast(r==="declined"?"Penyimpanan dibatalkan"+(ok?", teks sudah disalin.":"."):"Kolase tidak bisa disimpan di sini"+(ok?", teks sudah disalin.":"."));
+};
+
+$("dt").value=today();renderRows();upd();
+</script>
+</body>
+</html>
